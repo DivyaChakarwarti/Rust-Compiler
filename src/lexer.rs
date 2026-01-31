@@ -1,17 +1,15 @@
 //! Lexer
 
-use std::path::Path;
-
 /// Keywords: int, return
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Keyword {
+pub enum Keyword {
     Int,
     Return,
 }
 
 /// Punctuation: { }, ( ), ;
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Punctuation {
+pub enum Punctuation {
     OpenBrace,
     CloseBrace,
     OpenParanthesis,
@@ -21,7 +19,7 @@ enum Punctuation {
 
 /// Token types
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Token {
+pub enum Token {
     Keyword(Keyword),
     Ident(String),
     IntLit(i64),
@@ -29,7 +27,7 @@ enum Token {
 }
 
 /// Main lexer function
-fn lex(file: &str) -> Vec<Token> {
+pub fn lex(file: &str) -> Vec<Token> {
     let bytes = file.as_bytes();
     let mut tokens: Vec<Token> = vec![];
 
@@ -113,7 +111,7 @@ fn punctuation_token_from_byte(b: u8) -> Token {
 }
 
 /// For testing purposes
-fn main() {
+pub fn main() {
     let ex1 = lex("int main() { return 2; }");
     println!("{:?}", ex1);
 }
