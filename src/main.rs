@@ -1,5 +1,6 @@
 mod lexer;
 mod parser;
+mod generate;
 
 use std::{env, fs, process};
 
@@ -19,21 +20,11 @@ pub fn main() {
     // Lex source
     let tokens = lexer::lex(&source);
 
-    // Temproray usage only
-    // let return_value = extract_return_value(tokens);
-
+    // Parse tokens
     let ast = parser::parse(tokens).expect("Parsing failed");
-    let return_value = extract_return_value_from_ast(ast);
 
-    // Emit assembly
-    let asm = format!(
-        ".globl _main\n\
-        .p2align 2\n\
-        _main:\n\
-            mov w0, {}\n\
-            ret\n",
-        return_value
-    );
+    // Generate assembly
+    let asm = generate::generate(ast);
 
     // Write assembly to file
     let asm_path = format! {"{}.s", input_path};
@@ -65,14 +56,4 @@ fn extract_return_value(tokens: Vec<lexer::Token>) -> i64 {
         i += 1;
     }
     panic!("No return value found");
-}
-
-/// Helper function to extract return value from the AST
-fn extract_return_value_from_ast(ast: parser::AST) -> i64 {
-    let return_statement = &ast.program.functions[0].body[0];
-    match return_statement {
-        parser::Statement::Return(expression) => match expression {
-            parser::Expression::Const(lit) => *lit,
-        },
-    }
 }
