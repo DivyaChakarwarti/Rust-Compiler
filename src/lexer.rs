@@ -17,6 +17,14 @@ pub enum Punctuation {
     Semicolon,
 }
 
+// Operator: -, ~, !
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Operator {
+    Negation,
+    BitwiseNot,
+    LogicalNot,
+}
+
 /// Token types
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
@@ -24,6 +32,7 @@ pub enum Token {
     Ident(String),
     IntLit(i64),
     Punctuation(Punctuation),
+    Operator(Operator),
 }
 
 /// Main lexer function
@@ -43,6 +52,11 @@ pub fn lex(file: &str) -> Vec<Token> {
         match b {
             b'{' | b'}' | b'(' | b')' | b';' => {
                 tokens.push(punctuation_token_from_byte(b));
+                i += 1;
+                continue;
+            }
+            b'-' | b'~' | b'!' => {
+                tokens.push(operator_from_token_byte(b));
                 i += 1;
                 continue;
             }
@@ -110,8 +124,20 @@ fn punctuation_token_from_byte(b: u8) -> Token {
     };
 }
 
+fn operator_from_token_byte(b: u8) -> Token {
+    return match b {
+        b'-' => Token::Operator(Operator::Negation),
+        b'~' => Token::Operator(Operator::BitwiseNot),
+        b'!' => Token::Operator(Operator::LogicalNot),
+        _ => panic!("Invalid character: {}", b as char),
+    };
+}
+
 /// For testing purposes
 pub fn main() {
     let ex1 = lex("int main() { return 2; }");
     println!("{:?}", ex1);
+
+    let ex2 = lex("int main() { return ~12; }");
+    println!("{:?}", ex2);
 }
