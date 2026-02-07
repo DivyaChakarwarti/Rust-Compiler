@@ -1,6 +1,7 @@
 //! Parser
 
 use crate::lexer;
+// mod lexer;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
@@ -32,6 +33,7 @@ pub enum Statement {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
     Const(i64),
+    UnOp(lexer::Operator, Box<Expression>),
 }
 
 /// TokenStore is internal implementation.
@@ -153,18 +155,32 @@ fn parse_statement(ts: &mut TokenStore) -> Result<Statement, ParseError> {
 }
 
 fn parse_expression(ts: &mut TokenStore) -> Result<Expression, ParseError> {
-    // Expect an integer
-    let ret = ts.expect(|token| match token {
-        lexer::Token::IntLit(_) => true,
-        _ => false,
-    })?;
-
-    let value = match ret {
-        lexer::Token::IntLit(lit) => lit,
-        _ => unreachable!(),
-    };
-
-    Ok(Expression::Const(value))
+    let tok = ts.next();
+    match tok {
+        Some(lexer::Token::IntLit(lit)) => Ok(Expression::Const(lit)),
+        Some(lexer::Token::Operator(lexer::Operator::Negation)) => {
+            let inner_exp = parse_expression(ts)?;
+            Ok(Expression::UnOp(
+                lexer::Operator::Negation,
+                Box::new(inner_exp),
+            ))
+        }
+        Some(lexer::Token::Operator(lexer::Operator::BitwiseNot)) => {
+            let inner_exp = parse_expression(ts)?;
+            Ok(Expression::UnOp(
+                lexer::Operator::BitwiseNot,
+                Box::new(inner_exp),
+            ))
+        }
+        Some(lexer::Token::Operator(lexer::Operator::LogicalNot)) => {
+            let inner_exp = parse_expression(ts)?;
+            Ok(Expression::UnOp(
+                lexer::Operator::LogicalNot,
+                Box::new(inner_exp),
+            ))
+        }
+        _ => Err(ParseError::UnexpectedError),
+    }
 }
 
 fn main() {
@@ -174,5 +190,9 @@ fn main() {
 
     let ex2 = lexer::lex("int main() { }");
     let ast = parse(ex2);
+    println!("{:?}", ast);
+
+    let ex3 = lexer::lex("int main() { return ~12; }");
+    let ast = parse(ex3);
     println!("{:?}", ast);
 }
